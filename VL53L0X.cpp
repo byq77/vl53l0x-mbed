@@ -58,17 +58,14 @@ void VL53L0X::setAddress(uint8_t new_addr)
 // mode.
 bool VL53L0X::init(bool io_2v8)
 {
-  printf("1");
   // VL53L0X_DataInit() begin
   t.start();
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
-  printf("2");
   if (io_2v8)
   {
     writeReg(VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV,
       readReg(VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV) | 0x01); // set bit 0
   }
-  printf("3");
   // "Set I2C standard mode"
   writeReg(0x88, 0x00);
 
