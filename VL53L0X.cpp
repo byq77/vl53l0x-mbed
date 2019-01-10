@@ -33,11 +33,12 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-VL53L0X::VL53L0X(PinName sda_pin, PinName scl_pin)
+VL53L0X::VL53L0X(PinName sda_pin, PinName scl_pin, frequency)
   : i2c(sda_pin,scl_pin), address(ADDRESS_DEFAULT<<1)
   , io_timeout(0) // no timeout
   , did_timeout(false)
 {
+  i2c.frequency(frequency);
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
