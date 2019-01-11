@@ -151,7 +151,7 @@ class VL53L0X
 
     I2C i2c;
     Timer t;
-
+    int _frequency;
     uint8_t address;
     uint32_t io_timeout;
     bool did_timeout;

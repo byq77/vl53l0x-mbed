@@ -33,13 +33,13 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-VL53L0X::VL53L0X(PinName sda_pin, PinName scl_pin, frequency)
-  : i2c(sda_pin,scl_pin), address(ADDRESS_DEFAULT<<1)
+VL53L0X::VL53L0X(PinName sda_pin, PinName scl_pin, int frequency)
+  : i2c(sda_pin,scl_pin)
+  , _frequency(frequency) 
+  , address(ADDRESS_DEFAULT<<1)
   , io_timeout(0) // no timeout
   , did_timeout(false)
-{
-  i2c.frequency(frequency);
-}
+{}
 
 // Public Methods //////////////////////////////////////////////////////////////
 
@@ -61,6 +61,7 @@ bool VL53L0X::init(bool io_2v8)
 {
   // VL53L0X_DataInit() begin
   t.start();
+  i2c.frequency(frequency);
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
   if (io_2v8)
   {
