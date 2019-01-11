@@ -61,7 +61,7 @@ bool VL53L0X::init(bool io_2v8)
 {
   // VL53L0X_DataInit() begin
   t.start();
-  i2c.frequency(frequency);
+  i2c.frequency(_frequency);
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
   if (io_2v8)
   {
