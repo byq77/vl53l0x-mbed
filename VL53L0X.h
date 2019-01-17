@@ -2,6 +2,7 @@
 #define VL53L0X_h
 
 #include <mbed.h>
+#define MAX_BUFFER_SIZE 10
 
 class VL53L0X
 {
@@ -159,6 +160,7 @@ class VL53L0X
 
     uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
     uint32_t measurement_timing_budget_us;
+    unsigned char buffer[MAX_BUFFER_SIZE];
 
     bool getSpadInfo(uint8_t * count, bool * type_is_aperture);
 

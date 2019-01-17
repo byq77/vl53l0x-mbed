@@ -6,7 +6,7 @@
 #include <VL53L0X.h>
 
 // Defines /////////////////////////////////////////////////////////////////////
-#define MAX_MULTIPLE 10
+
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
 #define ADDRESS_DEFAULT 0b0101001
@@ -281,7 +281,6 @@ bool VL53L0X::init(bool io_2v8)
 // Write an 8-bit register
 void VL53L0X::writeReg(uint8_t reg, uint8_t value)
 {
-  uint8_t buffer[2];
   buffer[0] = reg;
   buffer[1] = value;
   last_status = i2c.write(address, (const char *)buffer, 2, 0);
@@ -290,7 +289,6 @@ void VL53L0X::writeReg(uint8_t reg, uint8_t value)
 // Write a 16-bit register
 void VL53L0X::writeReg16Bit(uint8_t reg, uint16_t value)
 {
-  uint8_t buffer[3];
   buffer[0]=reg;
   buffer[1]=(value >> 8) & 0xFF;
   buffer[2]=value & 0xFF;
@@ -300,7 +298,6 @@ void VL53L0X::writeReg16Bit(uint8_t reg, uint16_t value)
 // Write a 32-bit register
 void VL53L0X::writeReg32Bit(uint8_t reg, uint32_t value)
 {
-  uint8_t buffer[5];
   buffer[0] = reg;
   buffer[1] = (value >> 24) & 0xFF;
   buffer[2] = (value >> 16) & 0xFF;
@@ -321,11 +318,7 @@ uint8_t VL53L0X::readReg(uint8_t reg)
 
 uint16_t VL53L0X::readReg16Bit(uint8_t reg)
 {
-  
   uint16_t value;
-  uint8_t buffer[2];
-
-
   const char REG[] = {reg};
   i2c.write(address, REG, 1,0);
   last_status = i2c.read(address, (char*)buffer,2,0);
@@ -337,10 +330,7 @@ uint16_t VL53L0X::readReg16Bit(uint8_t reg)
 // Read a 32-bit register
 uint32_t VL53L0X::readReg32Bit(uint8_t reg)
 {
-  
   uint32_t value;
-  uint8_t buffer[4];
-  
   const char REG[] = {reg};
   i2c.write(address, REG, 1,0);
   last_status = i2c.read(address, (char*)buffer,4,0);
@@ -348,7 +338,6 @@ uint32_t VL53L0X::readReg32Bit(uint8_t reg)
   value |= (uint32_t)buffer[1] << 16;
   value |= (uint16_t)buffer[2] <<  8;
   value |=           buffer[3];       // value lowest byte
-
   return value;
 }
 
@@ -356,7 +345,6 @@ uint32_t VL53L0X::readReg32Bit(uint8_t reg)
 // starting at the given register
 void VL53L0X::writeMulti(uint8_t reg, uint8_t const * src, uint8_t count)
 {
-  uint8_t buffer[MAX_MULTIPLE];
   buffer[0]=reg;
   for(int i=1;i<count+1;++i)
     buffer[i]=*(src+i-1);
