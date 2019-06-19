@@ -11,11 +11,24 @@
 // and sets the last bit correctly based on reads and writes
 #define ADDRESS_DEFAULT 0b0101001
 
+#if VL53L0X_RTOS_KERNEL_MS_TICK
+
 // Record the current time to check an upcoming timeout against
-#define startTimeout() (timeout_start_ms = t.read_ms()) // TODO Use rtos::Kernel::get_ms_count instead.
+#define startTimeout() (timeout_start_ms = rtos::Kernel::get_ms_count())
+
+// Check if timeout is enabled (set to nonzero value) and has expired
+#define checkTimeoutExpired() (io_timeout > 0 && (rtos::Kernel::get_ms_count() - timeout_start_ms) > io_timeout)
+
+#else
+
+// Record the current time to check an upcoming timeout against
+#define startTimeout() (timeout_start_ms = t.read_ms())
 
 // Check if timeout is enabled (set to nonzero value) and has expired
 #define checkTimeoutExpired() (io_timeout > 0 && (t.read_ms() - timeout_start_ms) > io_timeout)
+
+#endif
+
 
 // Decode VCSEL (vertical cavity surface emitting laser) pulse period in PCLKs
 // from register value
@@ -33,13 +46,22 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-VL53L0X::VL53L0X(PinName sda_pin, PinName scl_pin, int frequency)
-  : i2c(sda_pin,scl_pin)
-  , _frequency(frequency) 
+#if VL53L0X_RTOS_KERNEL_MS_TICK
+VL53L0X::VL53L0X(I2C & i2c_instance)
+  : i2c(i2c_instance)
   , address(ADDRESS_DEFAULT<<1)
   , io_timeout(0) // no timeout
   , did_timeout(false)
 {}
+#else
+VL53L0X::VL53L0X(I2C & i2c_instance, Timer & timer)
+  : i2c(i2c_instance)
+  , t(timer)
+  , address(ADDRESS_DEFAULT<<1)
+  , io_timeout(0) // no timeout
+  , did_timeout(false)
+{}
+#endif
 
 // Public Methods //////////////////////////////////////////////////////////////
 
@@ -61,7 +83,6 @@ bool VL53L0X::init(bool io_2v8)
 {
   // VL53L0X_DataInit() begin
   t.start();
-  i2c.frequency(_frequency);
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
   if (io_2v8)
   {
@@ -781,23 +802,35 @@ void VL53L0X::stopContinuous(void)
 // Returns a range reading in millimeters when continuous mode is active
 // (readRangeSingleMillimeters() also calls this function after starting a
 // single-shot range measurement)
-uint16_t VL53L0X::readRangeContinuousMillimeters(void)
+uint16_t VL53L0X::readRangeContinuousMillimeters(bool blocking)
 {
-  startTimeout();
-  while ((readReg(RESULT_INTERRUPT_STATUS) & 0x07) == 0)
+  uint16_t range = 65535;
+
+  if (blocking)
   {
-    if (checkTimeoutExpired())
+    startTimeout();
+    while ((readReg(RESULT_INTERRUPT_STATUS) & 0x07) == 0)
     {
-      did_timeout = true;
-      return 65535;
+      if (checkTimeoutExpired())
+      {
+        did_timeout = true;
+        return range;
+      }
+    }
+    // assumptions: Linearity Corrective Gain is 1000 (default);
+    // fractional ranging is not enabled
+    range = readReg16Bit(RESULT_RANGE_STATUS + 10);
+
+    writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
+  }
+  else
+  {
+    if (readReg(RESULT_INTERRUPT_STATUS) & 0x07)
+    {
+      range = readReg16Bit(RESULT_RANGE_STATUS + 10);
+      writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
     }
   }
-
-  // assumptions: Linearity Corrective Gain is 1000 (default);
-  // fractional ranging is not enabled
-  uint16_t range = readReg16Bit(RESULT_RANGE_STATUS + 10);
-
-  writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
 
   return range;
 }

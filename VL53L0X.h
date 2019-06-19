@@ -97,7 +97,11 @@ class VL53L0X
 
     uint8_t last_status; // status of last I2C transmission
 
-    VL53L0X(PinName sda_pin, PinName scl_pin, int frequency=400000);
+#if VL53L0X_RTOS_KERNEL_MS_TICK
+    VL53L0X(I2C & i2c_instance);
+#else
+    VL53L0X(I2C & i2c_instance, Timer & timer);
+#endif
 
     void setAddress(uint8_t new_addr);
     inline uint8_t getAddress(void) { return address; }
@@ -125,7 +129,7 @@ class VL53L0X
 
     void startContinuous(uint32_t period_ms = 0);
     void stopContinuous(void);
-    uint16_t readRangeContinuousMillimeters(void);
+    uint16_t readRangeContinuousMillimeters(bool blocking=true);
     uint16_t readRangeSingleMillimeters(void);
 
     inline void setTimeout(uint32_t timeout) { io_timeout = timeout; }
@@ -150,13 +154,16 @@ class VL53L0X
       uint32_t msrc_dss_tcc_us,    pre_range_us,    final_range_us;
     };
 
-    I2C i2c;
-    Timer t;
-    int _frequency;
+    I2C & i2c;
+
+#if VL53L0X_RTOS_KERNEL_MS_TICK==0
+    Timer & t;
+#endif
+
     uint8_t address;
-    uint32_t io_timeout;
+    uint64_t io_timeout;
     bool did_timeout;
-    uint32_t timeout_start_ms;
+    uint64_t timeout_start_ms;
 
     uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
     uint32_t measurement_timing_budget_us;
