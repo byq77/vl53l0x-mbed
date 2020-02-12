@@ -2,10 +2,10 @@
     "name":"vl53l0x",
     "config":
     {
-        "rtos_kernel_ms_tick":
+        "non-blocking":
         {
             "help": "Choose rtos ms_tick instead ticker",
-            "macro_name": "VL53L0X_RTOS_KERNEL_MS_TICK",
+            "macro_name": "VL53L0X_MBED_NON_BLOCKING",
             "accepted_values": [0,1],
             "value": 0,
             "required": false

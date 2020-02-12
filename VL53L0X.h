@@ -3,7 +3,6 @@
 
 #include <mbed.h>
 #define MAX_BUFFER_SIZE 10
-
 class VL53L0X
 {
   public:
@@ -97,13 +96,17 @@ class VL53L0X
 
     uint8_t last_status; // status of last I2C transmission
 
-#if VL53L0X_RTOS_KERNEL_MS_TICK
+#if VL53L0X_MBED_NON_BLOCKING > 0
     VL53L0X(I2C & i2c_instance);
+    void i2c_event_cb(int event);
+    void i2c_timeout_cb();
+    void transferInternal(int tx_len, int rx_len);
 #else
     VL53L0X(I2C & i2c_instance, Timer & timer);
 #endif
 
     void setAddress(uint8_t new_addr);
+    void setDefaultAddress();
     inline uint8_t getAddress(void) { return address; }
 
     bool init(bool io_2v8 = true);
@@ -141,6 +144,7 @@ class VL53L0X
     // MSRC: Minimum Signal Rate Check
     // DSS: Dynamic Spad Selection
 
+
     struct SequenceStepEnables
     {
       bool tcc, msrc, dss, pre_range, final_range;
@@ -155,11 +159,14 @@ class VL53L0X
     };
 
     I2C & i2c;
-
-#if VL53L0X_RTOS_KERNEL_MS_TICK==0
+#if VL53L0X_MBED_NON_BLOCKING > 0
+    uint8_t snd_buffer[MAX_BUFFER_SIZE];
+    uint8_t rec_buffer[MAX_BUFFER_SIZE];
+#else
     Timer & t;
+    unsigned char buffer[MAX_BUFFER_SIZE];
 #endif
-
+    volatile int i2c_event;
     uint8_t address;
     uint64_t io_timeout;
     bool did_timeout;
@@ -167,7 +174,6 @@ class VL53L0X
 
     uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
     uint32_t measurement_timing_budget_us;
-    unsigned char buffer[MAX_BUFFER_SIZE];
 
     bool getSpadInfo(uint8_t * count, bool * type_is_aperture);
 
