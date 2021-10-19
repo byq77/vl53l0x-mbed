@@ -10,5 +10,10 @@
             "value": 0,
             "required": false
         }
+    },
+    "target_overrides": {
+        "CORE2": {
+            "non-blocking": 1            
+        }
     }
 }
