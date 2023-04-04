@@ -1,0 +1,9 @@
+{
+    "name": "vl53l0x-mbed",
+    "version": "1.0.0",
+    "description": "Mbed VL53L0X library for ROSbot 2.0",
+    "keywords": "pio, ros, vl53l0x, tof",
+    "build": {
+      "builder": "MbedLibBuilder"
+    }
+  }
